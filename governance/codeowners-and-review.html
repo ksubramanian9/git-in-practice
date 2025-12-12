@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>Git in Practice — CODEOWNERS & Review</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <!-- Prevent FOUC -->
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+
+<header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-14 items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button id="btnMobileNav"
+                class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                aria-label="Open navigation" aria-expanded="false">
+          ☰
+        </button>
+
+        <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+          <span class="hidden sm:inline">Git in Practice</span>
+        </a>
+
+        <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+        <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">
+          Governance
+        </span>
+      </div>
+
+      <button id="btnTheme"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+              aria-label="Toggle dark mode">
+        <span id="themeIcon" aria-hidden="true">🌙</span>
+        <span class="hidden sm:inline" id="themeLabel">Dark</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+  <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+    <!-- Sidebar -->
+    <aside class="lg:sticky lg:top-20">
+      <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+
+      <div id="sidebarPanel"
+           class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto
+                  border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950
+                  lg:static lg:block lg:h-auto lg:w-auto lg:border lg:rounded-2xl">
+
+        <!-- Sidebar will be injected here -->
+        <div data-include="../partials/sidebar.html"></div>
+
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <main class="min-w-0">
+      <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+        <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+        <span class="mx-2">/</span>
+        <span class="font-semibold text-slate-700 dark:text-slate-200">Governance</span>
+        <span class="mx-2">/</span>
+        <span class="font-semibold text-slate-700 dark:text-slate-200">CODEOWNERS & Review</span>
+      </div>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+        <header class="mb-6">
+          <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">
+            CODEOWNERS & Review
+            <span class="mt-1 block text-base font-semibold text-slate-600 dark:text-slate-300">
+              Enforce the right reviewers for every change
+            </span>
+          </h1>
+          <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+            CODEOWNERS files route pull requests to the people accountable for quality. This page standardizes how we define
+            ownership, structure review rules, and keep CODEOWNERS maintainable as the codebase grows.
+          </p>
+        </header>
+
+        <section class="space-y-10">
+          <section>
+            <h2 class="text-lg font-bold">Policy</h2>
+            <div class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+              <p><b>Must:</b> Every repository contains a <code class="rounded bg-slate-100 px-1 py-0.5 dark:bg-slate-900">CODEOWNERS</code> file at the repo root; monorepos add team-owned entries per folder.</p>
+              <p><b>Must:</b> Default ownership points to the platform team; more specific patterns override defaults for product areas and shared libraries.</p>
+              <p><b>Must:</b> PRs require at least one approval from a matching CODEOWNER; security-sensitive paths can require <b>2 approvals</b> using branch protection.</p>
+              <p><b>Should:</b> List <b>teams</b> (e.g., <code>@org/team-abc</code>) instead of individuals so vacations do not block merges.</p>
+              <p><b>Should:</b> Include a short comment block at the top explaining how to request ownership changes.</p>
+              <p><b>Must not:</b> Add wildcard owners that bypass domain experts (e.g., <code>* @everyone</code>).</p>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">File Layout</h2>
+            <div class="mt-3 grid gap-4 lg:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+                <div class="font-bold">Recommended structure</div>
+                <ul class="mt-3 space-y-2">
+                  <li>Header comment describing escalation path.</li>
+                  <li>Product domains grouped by folder (e.g., <code>api/</code>, <code>ui/</code>, <code>platform/</code>).</li>
+                  <li>Shared libraries explicitly owned (logging, auth, design system).</li>
+                  <li>Catch-all default owner at the bottom.</li>
+                  <li>Temporary overrides expire with a date and issue link.</li>
+                </ul>
+              </div>
+
+              <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 dark:border-indigo-900/40 dark:bg-indigo-950/40 dark:text-indigo-100">
+                <div class="font-bold">Sample snippet</div>
+                <pre class="mt-3 whitespace-pre-wrap text-sm"># Owners: add/edit via Platform ticket
+/ui/              @org/frontend
+/api/             @org/backend
+/platform/ci/     @org/devex
+*                 @org/platform</pre>
+                <p class="mt-2 text-indigo-900/90 dark:text-indigo-100/90">Use team aliases so reviews stay resilient to staffing changes.</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Operational Guidance</h2>
+            <div class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+              <p><b>Submission:</b> CODEOWNERS updates follow the same PR standards as code (CI + review from existing owners).</p>
+              <p><b>Audits:</b> Quarterly review CODEOWNERS entries with team leads; remove deprecated teams and confirm coverage for new domains.</p>
+              <p><b>Escalation:</b> If owners are unresponsive after <b>2 business days</b>, Engineering Managers can apply a one-time override with a documented reason.</p>
+              <p><b>Tooling:</b> Enable branch protection to require CODEOWNER review and dismiss stale approvals after force-push or file changes.</p>
+            </div>
+
+            <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+              <div class="font-bold">Rationale</div>
+              <p class="mt-2">
+                CODEOWNERS keeps expertise aligned with code paths and prevents high-risk areas from being merged without proper oversight.
+                Standard structure avoids drift between teams and speeds up onboarding.
+              </p>
+            </div>
+          </section>
+        </section>
+
+        <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div class="flex justify-between">
+            <span>© Internal — Git Operating Model</span>
+            <span>Doc version: 0.1</span>
+          </div>
+        </footer>
+      </article>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>
