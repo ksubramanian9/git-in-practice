@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Git in Practice — GitHub Setup</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+
+<header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-14 items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button id="btnMobileNav"
+                class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                aria-label="Open navigation" aria-expanded="false">☰</button>
+
+        <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+          <span class="hidden sm:inline">Git in Practice</span>
+        </a>
+
+        <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+        <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">Platform</span>
+      </div>
+
+      <button id="btnTheme"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+              aria-label="Toggle dark mode">
+        <span id="themeIcon" aria-hidden="true">🌙</span>
+        <span class="hidden sm:inline" id="themeLabel">Dark</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+  <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+    <aside class="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-auto">
+      <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+      <div id="sidebarPanel"
+           class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto border-r border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-950 lg:static lg:block lg:h-auto lg:w-auto lg:max-w-none lg:border lg:rounded-2xl lg:p-4 lg:shadow-none">
+        <div data-include="../partials/sidebar.html"></div>
+        <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+          <div class="font-bold">Doc owner</div><div class="mt-1">Engineering Platform</div>
+          <div class="mt-3 font-bold">Last reviewed</div><div class="mt-1">YYYY-MM-DD</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="min-w-0">
+      <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+        <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+        <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">Platform</span>
+        <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">GitHub Setup</span>
+      </div>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+        <header class="mb-6">
+          <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">GitHub Setup</h1>
+          <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+            Baseline GitHub configuration for protected branches, required reviewers, and CI checks so every repository ships with the same guardrails.
+          </p>
+        </header>
+
+        <section class="space-y-10">
+          <section>
+            <h2 class="text-lg font-bold">Policy</h2>
+            <ul class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+              <li><b>Must:</b> Protect <b>main</b>, <b>release/*</b>, and <b>hotfix/*</b> with required reviews and status checks.</li>
+              <li><b>Must:</b> Require at least one CODEOWNER review for shared components; two for high-risk services.</li>
+              <li><b>Must:</b> Enforce signed commits, branch deletion on merge, and linear history.</li>
+              <li><b>Should:</b> Enable secret scanning, Dependabot alerts, and auto-merge for green, approved PRs.</li>
+              <li><b>Must not:</b> Allow admins to bypass protections except during documented incident response.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Repository configuration checklist</h2>
+            <ol class="mt-3 list-decimal space-y-3 pl-5 text-slate-700 dark:text-slate-200">
+              <li>
+                <div class="font-semibold">Branch protections</div>
+                <ul class="mt-2 list-disc space-y-2 pl-5 text-sm">
+                  <li>Add <b>main</b> and active <b>release/*</b> branches as protected.</li>
+                  <li>Require status checks: build, unit/integration tests, security scanners, license checks.</li>
+                  <li>Enable <i>Require branches to be up to date</i> and <i>Require signed commits</i>.</li>
+                  <li>Disable force pushes; allow deletions only through merge clean-up.</li>
+                </ul>
+              </li>
+              <li>
+                <div class="font-semibold">Review standards</div>
+                <ul class="mt-2 list-disc space-y-2 pl-5 text-sm">
+                  <li>Require pull request approvals and dismiss stale approvals on new commits.</li>
+                  <li>Enforce CODEOWNERS review for owned paths; set minimum approvals per risk profile.</li>
+                  <li>Block merge when conversations are unresolved.</li>
+                </ul>
+              </li>
+              <li>
+                <div class="font-semibold">Security & automation</div>
+                <ul class="mt-2 list-disc space-y-2 pl-5 text-sm">
+                  <li>Turn on secret scanning (push protection) and Dependabot security updates.</li>
+                  <li>Configure branch rules for GitHub Environments when production deploys need approvals.</li>
+                  <li>Enable auto-merge for PRs that are approved and green to reduce queue latency.</li>
+                </ul>
+              </li>
+              <li>
+                <div class="font-semibold">Repository hygiene</div>
+                <ul class="mt-2 list-disc space-y-2 pl-5 text-sm">
+                  <li>Require PR titles follow conventional commit or ticket-number format.</li>
+                  <li>Auto-delete head branches on merge and prevent merging red pipelines.</li>
+                  <li>Pin required workflows to specific SHAs to avoid supply-chain drift.</li>
+                </ul>
+              </li>
+            </ol>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Setup procedure</h2>
+            <ol class="mt-3 list-decimal space-y-3 pl-5 text-slate-700 dark:text-slate-200">
+              <li>Open <b>Settings → Branches</b>; add branch protection rules for <b>main</b> and <b>release/*</b> with required checks and reviews.</li>
+              <li>Commit a <code>CODEOWNERS</code> file defining ownership by path; ensure CODEOWNERS is required in branch rules.</li>
+              <li>In <b>Actions → General</b>, restrict workflow permissions to <i>Read and write</i> for contents and disable <i>Allow GitHub Actions to create and approve pull requests</i>.</li>
+              <li>Enable <b>Security & analysis</b>: secret scanning (with push protection) and Dependabot alerts.</li>
+              <li>For production deploys, configure <b>Environments</b> with required reviewers and wait timers before jobs can promote.</li>
+              <li>Verify required CI checks run on PRs by referencing the workflow names listed in <a class="link" href="./required-ci-checks.html">Required CI Checks</a>.</li>
+            </ol>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Rationale</h2>
+            <p class="mt-3 text-slate-700 dark:text-slate-200">
+              Consistent GitHub controls prevent drift between repositories, keep protected branches releasable, and give security teams predictable checkpoints for audits. Signed commits, required reviews, and enforced checks make every release traceable back to reviewed code and verified pipelines.
+            </p>
+          </section>
+        </section>
+
+        <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>© Internal — Git Operating Model</div>
+            <div>Doc version: <span class="font-semibold">0.1</span></div>
+          </div>
+        </footer>
+      </article>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

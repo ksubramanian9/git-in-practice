@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Git in Practice — Required CI Checks</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+
+<header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-14 items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button id="btnMobileNav"
+                class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                aria-label="Open navigation" aria-expanded="false">☰</button>
+
+        <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+          <span class="hidden sm:inline">Git in Practice</span>
+        </a>
+
+        <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+        <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">Platform</span>
+      </div>
+
+      <button id="btnTheme"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+              aria-label="Toggle dark mode">
+        <span id="themeIcon" aria-hidden="true">🌙</span>
+        <span class="hidden sm:inline" id="themeLabel">Dark</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+  <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+    <aside class="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-auto">
+      <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+      <div id="sidebarPanel"
+           class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto border-r border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-950 lg:static lg:block lg:h-auto lg:w-auto lg:max-w-none lg:border lg:rounded-2xl lg:p-4 lg:shadow-none">
+        <div data-include="../partials/sidebar.html"></div>
+        <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+          <div class="font-bold">Doc owner</div><div class="mt-1">Engineering Platform</div>
+          <div class="mt-3 font-bold">Last reviewed</div><div class="mt-1">YYYY-MM-DD</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="min-w-0">
+      <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+        <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+        <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">Platform</span>
+        <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">Required CI Checks</span>
+      </div>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+        <header class="mb-6">
+          <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Required CI Checks</h1>
+          <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+            Minimum pipeline gates every repository must enforce before merging to protected branches, regardless of Git host.
+          </p>
+        </header>
+
+        <section class="space-y-10">
+          <section>
+            <h2 class="text-lg font-bold">Policy</h2>
+            <ul class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+              <li><b>Must:</b> Block merges to <b>main</b>, <b>release/*</b>, and <b>hotfix/*</b> unless all required checks pass.</li>
+              <li><b>Must:</b> Run required checks on pull/merge requests and default branch pushes.</li>
+              <li><b>Should:</b> Fail the pipeline when coverage drops below the agreed project threshold.</li>
+              <li><b>Must not:</b> Mark flaky or optional checks as <i>required</i>; instead fix or quarantine them.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Standard required checks</h2>
+            <div class="mt-3 grid gap-4 lg:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+                <div class="font-bold">Quality & safety</div>
+                <ul class="mt-2 list-disc space-y-2 pl-5 text-slate-700 dark:text-slate-200">
+                  <li><b>Build</b>: deterministic build, artifact signing where applicable.</li>
+                  <li><b>Unit & integration tests</b>: project-defined coverage threshold enforced.</li>
+                  <li><b>Lint & formatting</b>: language-standard linters (ESLint, flake8, golangci-lint, etc.).</li>
+                  <li><b>Static analysis</b>: SAST tools matching the stack (CodeQL, Semgrep, bandit).</li>
+                </ul>
+              </div>
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+                <div class="font-bold">Security & release gates</div>
+                <ul class="mt-2 list-disc space-y-2 pl-5 text-slate-700 dark:text-slate-200">
+                  <li><b>Dependency scanning</b>: block on known critical/high CVEs.</li>
+                  <li><b>Container/image scan</b>: vulnerability scan for built images before publishing.</li>
+                  <li><b>License compliance</b>: fail on disallowed licenses.</li>
+                  <li><b>Artifact provenance</b>: sign images/binaries or produce SBOM for release artifacts.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Platform-specific mapping</h2>
+            <div class="mt-3 grid gap-4 lg:grid-cols-2">
+              <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 dark:border-indigo-900/40 dark:bg-indigo-950/40 dark:text-indigo-100">
+                <div class="font-bold">GitHub</div>
+                <ul class="mt-2 list-disc space-y-2 pl-5">
+                  <li>Mark workflow jobs as <b>required</b> in Branch protection → Status checks.</li>
+                  <li>Name the required checks identically to the workflow job (e.g., <code>test</code>, <code>lint</code>, <code>container-scan</code>).</li>
+                  <li>Set <i>Require branches to be up to date</i> so checks rerun after rebase/merge.</li>
+                  <li>Pin reusable workflows to a tag or SHA to prevent supply-chain drift.</li>
+                </ul>
+              </div>
+              <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-100">
+                <div class="font-bold">GitLab</div>
+                <ul class="mt-2 list-disc space-y-2 pl-5">
+                  <li>Set required jobs under <i>Pipelines must succeed</i>; ensure required jobs are not <code>allow_failure</code>.</li>
+                  <li>Mark deploy jobs as <b>protected</b> and tie them to protected branches and environments.</li>
+                  <li>Use <code>rules:</code> to block merge if required jobs are skipped or when <code>[skip ci]</code> is present.</li>
+                  <li>Publish coverage values via <code>coverage:</code> regex and enforce thresholds in the job script.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Operational guidance</h2>
+            <ul class="mt-3 space-y-2 text-slate-700 dark:text-slate-200">
+              <li>Document required check names in the repository README so contributors know what must pass.</li>
+              <li>Quarantine flaky jobs behind <code>non-blocking</code> labels while they are being fixed; do not mark them required.</li>
+              <li>For emergencies, merge via a <b>hotfix/*</b> branch with approval and a follow-up to restore failing checks.</li>
+              <li>Audit required checks quarterly to retire unused jobs and align with updated security baselines.</li>
+            </ul>
+          </section>
+        </section>
+
+        <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>© Internal — Git Operating Model</div>
+            <div>Doc version: <span class="font-semibold">0.1</span></div>
+          </div>
+        </footer>
+      </article>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>
