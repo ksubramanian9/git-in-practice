@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Git in Practice — Hotfix Process</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+  <header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+    <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-14 items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <button id="btnMobileNav"
+                  class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                  aria-label="Open navigation" aria-expanded="false">☰</button>
+
+          <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+            <span class="hidden sm:inline">Git in Practice</span>
+          </a>
+
+          <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+          <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">Releases</span>
+        </div>
+
+        <button id="btnTheme"
+                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                aria-label="Toggle dark mode">
+          <span id="themeIcon" aria-hidden="true">🌙</span>
+          <span class="hidden sm:inline" id="themeLabel">Dark</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+      <aside class="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-auto">
+        <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+        <div id="sidebarPanel"
+             class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto border-r border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-950 lg:static lg:block lg:h-auto lg:w-auto lg:max-w-none lg:border lg:rounded-2xl lg:p-4 lg:shadow-none">
+          <div data-include="../partials/sidebar.html"></div>
+          <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            <div class="font-bold">Doc owner</div><div class="mt-1">Engineering Platform</div>
+            <div class="mt-3 font-bold">Last reviewed</div><div class="mt-1">YYYY-MM-DD</div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="min-w-0">
+        <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+          <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+          <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">Releases</span>
+          <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">Hotfix Process</span>
+        </div>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+          <header class="mb-6">
+            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Hotfix Process</h1>
+            <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+              How to ship urgent fixes without destabilizing mainline development or violating release traceability.
+            </p>
+          </header>
+
+          <section class="space-y-10">
+            <section>
+              <h2 class="text-lg font-bold">Policy</h2>
+              <ul class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+                <li><b>Must:</b> Declare an incident commander for any production-impacting hotfix.</li>
+                <li><b>Must:</b> Branch from the <b>current production tag</b> (or its commit), not from main.</li>
+                <li><b>Must:</b> Use a dedicated <code>hotfix/x.y.z-n</code> branch with the same protections as release branches.</li>
+                <li><b>Should:</b> Keep changes minimal; prefer feature flags or configuration toggles to reduce blast radius.</li>
+                <li><b>Must not:</b> Bypass PR review or required checks; emergency does not remove quality gates.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 class="text-lg font-bold">Execution steps</h2>
+              <ol class="mt-3 list-decimal space-y-3 pl-5 text-slate-700 dark:text-slate-200">
+                <li>Identify the production tag to fix and branch <code>hotfix/x.y.z-1</code> from that commit.</li>
+                <li>Implement the minimal fix, add targeted tests, and open a PR to the hotfix branch.</li>
+                <li>Run mandatory checks (unit, smoke, security) and capture evidence in the PR.</li>
+                <li>Tag the hotfix branch HEAD as <code>vX.Y.Z+hotfixN</code> once approved and green.</li>
+                <li>Promote the tagged artifact directly to the affected environments with heightened monitoring.</li>
+                <li>Backport the hotfix to <b>main</b> (and active release branches) via a follow-up PR to prevent regression.</li>
+              </ol>
+
+              <div class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-950 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-100">
+                <div class="font-bold">Communication</div>
+                <p class="mt-2">Announce start/end of the hotfix window in #eng-ops with the tag, owners, and risk summary. Update the incident ticket with rollout timing and monitoring status.</p>
+              </div>
+            </section>
+
+            <section>
+              <h2 class="text-lg font-bold">Quality & rollback</h2>
+              <div class="mt-3 grid gap-4 md:grid-cols-2">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div class="text-sm font-bold">Quality controls</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Automated checks must stay enabled; flaky tests are triaged, not disabled.</li>
+                    <li>Include reproduction steps and validation checklist in the PR description.</li>
+                    <li>Security review required for fixes touching auth, data access, or secrets.</li>
+                  </ul>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div class="text-sm font-bold">Rollback readiness</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Keep the previous production tag available for immediate redeploy.</li>
+                    <li>Document any data migrations or feature flag changes that must be reverted.</li>
+                    <li>Monitor error rates, latency, and business KPIs for at least one full cycle post-deploy.</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+          </section>
+
+          <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <div class="flex justify-between">
+              <span>© Internal — Git Operating Model</span>
+              <span>Doc version: 0.1</span>
+            </div>
+          </footer>
+        </article>
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/site.js"></script>
+</body>
+</html>
