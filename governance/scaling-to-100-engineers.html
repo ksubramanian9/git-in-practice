@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>Git in Practice — Scaling to 100+ Engineers</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <!-- Prevent FOUC -->
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+
+<header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-14 items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button id="btnMobileNav"
+                class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                aria-label="Open navigation" aria-expanded="false">
+          ☰
+        </button>
+
+        <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+          <span class="hidden sm:inline">Git in Practice</span>
+        </a>
+
+        <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+        <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">
+          Governance
+        </span>
+      </div>
+
+      <button id="btnTheme"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+              aria-label="Toggle dark mode">
+        <span id="themeIcon" aria-hidden="true">🌙</span>
+        <span class="hidden sm:inline" id="themeLabel">Dark</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+  <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+    <!-- Sidebar -->
+    <aside class="lg:sticky lg:top-20">
+      <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+
+      <div id="sidebarPanel"
+           class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto
+                  border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950
+                  lg:static lg:block lg:h-auto lg:w-auto lg:border lg:rounded-2xl">
+
+        <!-- Sidebar will be injected here -->
+        <div data-include="../partials/sidebar.html"></div>
+
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <main class="min-w-0">
+      <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+        <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+        <span class="mx-2">/</span>
+        <span class="font-semibold text-slate-700 dark:text-slate-200">Governance</span>
+        <span class="mx-2">/</span>
+        <span class="font-semibold text-slate-700 dark:text-slate-200">Scaling to 100+ Engineers</span>
+      </div>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+        <header class="mb-6">
+          <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">
+            Scaling to 100+ Engineers
+            <span class="mt-1 block text-base font-semibold text-slate-600 dark:text-slate-300">
+              Keep quality and throughput as teams multiply
+            </span>
+          </h1>
+          <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+            Scaling delivery means tightening automation, clarifying ownership, and reducing coordination cost. These practices
+            keep the Git operating model stable as the team count grows.
+          </p>
+        </header>
+
+        <section class="space-y-10">
+          <section>
+            <h2 class="text-lg font-bold">Structural Guardrails</h2>
+            <div class="mt-3 grid gap-4 lg:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950">
+                <ul class="list-disc space-y-2 pl-5">
+                  <li>Enforce branch protections (status checks + CODEOWNER review) on <b>main</b> and release branches.</li>
+                  <li>Adopt consistent branch naming (<code>feature/*</code>, <code>fix/*</code>, <code>release/*</code>) enforced by CI.</li>
+                  <li>Use reusable workflows or templates for CI so new services inherit the same checks.</li>
+                </ul>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950">
+                <ul class="list-disc space-y-2 pl-5">
+                  <li>Centralize tagging and release tooling; avoid per-team scripts.</li>
+                  <li>Default to trunk-based development for platform components to reduce merge queues.</li>
+                  <li>Document the release calendar and freeze windows in a single place.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Collaboration at Scale</h2>
+            <div class="mt-3 grid gap-4 lg:grid-cols-2">
+              <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 dark:border-indigo-900/40 dark:bg-indigo-950/40 dark:text-indigo-100">
+                <div class="font-bold">Team topology</div>
+                <ul class="mt-3 space-y-2">
+                  <li>Assign code ownership by domain boundaries, not by environment or release train.</li>
+                  <li>Define escalation chains for high-risk paths (security, data pipelines).</li>
+                  <li>Keep PR descriptions lightweight but structured: summary, testing, rollout plan.</li>
+                </ul>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+                <div class="font-bold">Review hygiene</div>
+                <ul class="mt-3 space-y-2">
+                  <li>Set SLA: reviewers acknowledge within <b>4 business hours</b>, approve within one day.</li>
+                  <li>Break down PRs over <b>400 lines</b> or unrelated changes before requesting review.</li>
+                  <li>Use draft PRs to pre-align on approach and reduce late-cycle rework.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Automation & Quality Signals</h2>
+            <div class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+              <p><b>CI coverage:</b> Every repo has unit tests, lint, and vulnerability scanning as required checks. Add smoke deploy tests for services with frequent releases.</p>
+              <p><b>Metrics:</b> Track lead time for changes, change failure rate, and review turnaround; alert when trends regress.</p>
+              <p><b>Release safety:</b> Use progressive delivery where possible (canaries, feature flags) and record rollback procedures per service.</p>
+              <p><b>Knowledge:</b> Publish short runbooks for common workflows (release cut, hotfix, rollback) in the repo wiki or docs folder.</p>
+            </div>
+
+            <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+              <div class="font-bold">Rationale</div>
+              <p class="mt-2">
+                Scale adds coordination drag. Shared guardrails, automation, and clear ownership keep the system predictable so teams can ship independently without compromising reliability.
+              </p>
+            </div>
+          </section>
+        </section>
+
+        <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div class="flex justify-between">
+            <span>© Internal — Git Operating Model</span>
+            <span>Doc version: 0.1</span>
+          </div>
+        </footer>
+      </article>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>
