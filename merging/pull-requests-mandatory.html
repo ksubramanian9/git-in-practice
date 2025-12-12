@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Git in Practice — PRs Are Mandatory</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+
+<header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-14 items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button id="btnMobileNav"
+                class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                aria-label="Open navigation" aria-expanded="false">☰</button>
+
+        <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+          <span class="hidden sm:inline">Git in Practice</span>
+        </a>
+
+        <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+        <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">Merging</span>
+      </div>
+
+      <button id="btnTheme"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+              aria-label="Toggle dark mode">
+        <span id="themeIcon" aria-hidden="true">🌙</span>
+        <span class="hidden sm:inline" id="themeLabel">Dark</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+  <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+    <aside class="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-auto">
+      <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+      <div id="sidebarPanel"
+           class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto border-r border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-950 lg:static lg:block lg:h-auto lg:w-auto lg:max-w-none lg:border lg:rounded-2xl lg:p-4 lg:shadow-none">
+        <div data-include="../partials/sidebar.html"></div>
+        <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+          <div class="font-bold">Doc owner</div><div class="mt-1">Engineering Platform</div>
+          <div class="mt-3 font-bold">Last reviewed</div><div class="mt-1">YYYY-MM-DD</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="min-w-0">
+      <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+        <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+        <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">Merging</span>
+        <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">PRs Are Mandatory</span>
+      </div>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+        <header class="mb-6">
+          <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">PRs Are Mandatory</h1>
+          <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+            Every change merges through a reviewed pull request with passing checks. This preserves a buildable mainline, auditable history, and alignment with release traceability.
+          </p>
+        </header>
+
+        <section class="space-y-10">
+          <section>
+            <h2 class="text-lg font-bold">Policy</h2>
+            <ul class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+              <li><b>Must:</b> All merges into protected branches (<b>main</b>, <b>release/*</b>, <b>hotfix/*</b>) go through a PR.</li>
+              <li><b>Must:</b> Required CI checks (build, tests, linters) pass before merge; disablement is forbidden.</li>
+              <li><b>Must:</b> At least one CODEOWNER or designated reviewer approves the PR; self-approval alone is not sufficient for shared code.</li>
+              <li><b>Must:</b> PRs reference work items or release tickets for traceability.</li>
+              <li><b>Should:</b> Keep PRs small and focused to reduce review latency and rollback cost.</li>
+              <li><b>Must not:</b> Push directly to protected branches or bypass review using admin privileges.</li>
+            </ul>
+
+            <div class="mt-5 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 dark:border-indigo-900/40 dark:bg-indigo-950/40 dark:text-indigo-100">
+              <div class="font-bold">Rationale</div>
+              <p class="mt-2">
+                PR gates are how we keep <b>main</b> buildable, releases traceable, and production recoverable. They create reviewable checkpoints, surface risks early, and provide an audit trail for shipped artifacts.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Pull request lifecycle</h2>
+            <div class="mt-3 grid gap-4 lg:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                <div class="text-sm font-bold">Author responsibilities</div>
+                <ol class="mt-2 list-decimal space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                  <li>Branch from the correct base (<b>main</b> or the active <b>release/*</b>).</li>
+                  <li>Open the PR early with a concise title, summary, and linked ticket.</li>
+                  <li>Keep the branch current (rebase or merge main) before requesting final review.</li>
+                  <li>Ensure required checks pass; rerun flaky checks rather than merging red.</li>
+                  <li>Address review feedback promptly and transparently.</li>
+                </ol>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                <div class="text-sm font-bold">Reviewer responsibilities</div>
+                <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                  <li>Confirm scope: correct base branch, minimal change surface, clear rollback strategy.</li>
+                  <li>Verify tests and required checks are green; request evidence if missing.</li>
+                  <li>Inspect risk areas: migrations, feature flags, backward compatibility.</li>
+                  <li>Block merges that endanger <b>main</b> stability or traceability.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Quality bar</h2>
+            <ul class="mt-3 grid gap-3 text-sm sm:grid-cols-2 text-slate-700 dark:text-slate-200">
+              <li class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                <div class="font-bold">Definition of ready</div>
+                <ul class="mt-2 list-disc space-y-2 pl-5">
+                  <li>Scoped to a single concern; breaking changes behind flags.</li>
+                  <li>Includes tests or an explicit rationale for missing coverage.</li>
+                  <li>Describes user impact and operational risks.</li>
+                </ul>
+              </li>
+              <li class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                <div class="font-bold">Definition of done</div>
+                <ul class="mt-2 list-disc space-y-2 pl-5">
+                  <li>Required reviews complete; comments resolved.</li>
+                  <li>All checks green; no force merges of red pipelines.</li>
+                  <li>Deployment notes captured (feature flags, runbooks, migration steps).</li>
+                </ul>
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Exception handling</h2>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              Emergencies are rare. When production needs an immediate fix, we still enforce traceability.
+            </p>
+            <ul class="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-200">
+              <li>Use a <b>hotfix/*</b> branch from the production tag and open a PR with highest priority.</li>
+              <li>Require at least one reviewer; pair review in chat or call if time constrained.</li>
+              <li>After merge, tag the release, deploy, and back-merge to <b>main</b> to keep history linear.</li>
+              <li>Record the incident and justification in the release log.</li>
+            </ul>
+          </section>
+        </section>
+
+        <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>© Internal — Git Operating Model</div>
+            <div>Doc version: <span class="font-semibold">0.1</span></div>
+          </div>
+        </footer>
+      </article>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>
