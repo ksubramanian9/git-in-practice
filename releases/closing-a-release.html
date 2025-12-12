@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Git in Practice — Closing a Release</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+  <header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+    <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-14 items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <button id="btnMobileNav"
+                  class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                  aria-label="Open navigation" aria-expanded="false">☰</button>
+
+          <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+            <span class="hidden sm:inline">Git in Practice</span>
+          </a>
+
+          <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+          <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">Releases</span>
+        </div>
+
+        <button id="btnTheme"
+                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                aria-label="Toggle dark mode">
+          <span id="themeIcon" aria-hidden="true">🌙</span>
+          <span class="hidden sm:inline" id="themeLabel">Dark</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+      <aside class="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-auto">
+        <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+        <div id="sidebarPanel"
+             class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto border-r border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-950 lg:static lg:block lg:h-auto lg:w-auto lg:max-w-none lg:border lg:rounded-2xl lg:p-4 lg:shadow-none">
+          <div data-include="../partials/sidebar.html"></div>
+          <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            <div class="font-bold">Doc owner</div><div class="mt-1">Engineering Platform</div>
+            <div class="mt-3 font-bold">Last reviewed</div><div class="mt-1">YYYY-MM-DD</div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="min-w-0">
+        <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+          <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+          <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">Releases</span>
+          <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">Closing a Release</span>
+        </div>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+          <header class="mb-6">
+            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Closing a Release</h1>
+            <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+              The checklist for wrapping up a release after production rollout: merge-backs, documentation, and metrics.
+            </p>
+          </header>
+
+          <section class="space-y-10">
+            <section>
+              <h2 class="text-lg font-bold">Exit criteria</h2>
+              <ul class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+                <li><b>Must:</b> Production deployment is healthy for one full business cycle with no Sev1/Sev2 incidents.</li>
+                <li><b>Must:</b> Release notes include tag, commit range, known issues, and rollout dates.</li>
+                <li><b>Should:</b> Customer-facing changes have KB articles or support macros prepared.</li>
+                <li><b>Must:</b> Rollback path to the previous tag remains documented until the next release is cut.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 class="text-lg font-bold">Post-release tasks</h2>
+              <div class="mt-3 grid gap-4 md:grid-cols-2">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div class="text-sm font-bold">Merge-backs</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Merge the release branch back to <b>main</b> with a merge commit to preserve history.</li>
+                    <li>Forward-port critical fixes to active release branches and feature flags.</li>
+                    <li>Retire the release branch after merge to reduce noise.</li>
+                  </ul>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div class="text-sm font-bold">Documentation & artifacts</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Publish final release notes and link the deployment dashboards.</li>
+                    <li>Capture config deltas between environments and store with the release record.</li>
+                    <li>Update runbooks, playbooks, and status pages to reference the deployed tag.</li>
+                  </ul>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div class="text-sm font-bold">Metrics & follow-ups</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Review error budgets, latency, and adoption metrics vs. the release goals.</li>
+                    <li>Log action items (tech debt, observability gaps, test improvements) with owners and due dates.</li>
+                    <li>Hold a short retro if the release contained emergency changes or missed SLOs.</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 class="text-lg font-bold">Archival</h2>
+              <p class="mt-3 text-slate-700 dark:text-slate-200">
+                Store the signed tag, release notes, and artifact digests in the release registry. Mark the release status as "Closed" and attach links to monitoring dashboards used during validation. This ensures future audits and incident investigations have a complete record.
+              </p>
+            </section>
+          </section>
+
+          <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <div class="flex justify-between">
+              <span>© Internal — Git Operating Model</span>
+              <span>Doc version: 0.1</span>
+            </div>
+          </footer>
+        </article>
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/site.js"></script>
+</body>
+</html>

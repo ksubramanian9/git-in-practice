@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Git in Practice — Release Lifecycle</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+  <header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+    <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-14 items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <button id="btnMobileNav"
+                  class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                  aria-label="Open navigation" aria-expanded="false">☰</button>
+
+          <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+            <span class="hidden sm:inline">Git in Practice</span>
+          </a>
+
+          <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+          <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">Releases</span>
+        </div>
+
+        <button id="btnTheme"
+                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                aria-label="Toggle dark mode">
+          <span id="themeIcon" aria-hidden="true">🌙</span>
+          <span class="hidden sm:inline" id="themeLabel">Dark</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+      <aside class="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-auto">
+        <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+        <div id="sidebarPanel"
+             class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto border-r border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-950 lg:static lg:block lg:h-auto lg:w-auto lg:max-w-none lg:border lg:rounded-2xl lg:p-4 lg:shadow-none">
+          <div data-include="../partials/sidebar.html"></div>
+          <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            <div class="font-bold">Doc owner</div><div class="mt-1">Engineering Platform</div>
+            <div class="mt-3 font-bold">Last reviewed</div><div class="mt-1">YYYY-MM-DD</div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="min-w-0">
+        <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+          <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+          <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">Releases</span>
+          <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">Release Lifecycle</span>
+        </div>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+          <header class="mb-6">
+            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Release Lifecycle</h1>
+            <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+              How we plan, cut, stabilize, and ship releases so every environment reflects a deliberate state with clear ownership and traceability.
+            </p>
+          </header>
+
+          <section class="space-y-10">
+            <section>
+              <h2 class="text-lg font-bold">Policy</h2>
+              <ul class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+                <li><b>Must:</b> Every release begins from <b>main</b> after required checks are green and scope is declared.</li>
+                <li><b>Must:</b> Release branches are short-lived and created only for stabilization and UAT hardening.</li>
+                <li><b>Must:</b> Each stage (cut → harden → tag → deploy) has explicit exit criteria owned by the release manager.</li>
+                <li><b>Should:</b> Freeze risky changes after the cut; defer scope creep to the next release unless approved by incident command.</li>
+                <li><b>Must not:</b> Cherry-pick unreviewed commits; all fixes flow through PRs with the same quality gates as main.</li>
+              </ul>
+
+              <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-50">
+                <div class="font-bold">Why this matters</div>
+                <p class="mt-2">
+                  A predictable lifecycle reduces surprises for QA, keeps production deployable at will, and makes rollback strategies straightforward.
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 class="text-lg font-bold">Stages & gates</h2>
+              <div class="mt-3 grid gap-4 md:grid-cols-2">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div class="text-sm font-bold">Cut</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Create <code>release/x.y.z</code> from <b>main</b> after CI is green and scope is confirmed.</li>
+                    <li>Enable release branch protections (PRs required, status checks, CODEOWNERS).</li>
+                    <li>Record owner, scope, and planned date in the release notes draft.</li>
+                  </ul>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div class="text-sm font-bold">Harden</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Stabilization happens on the release branch; only bug fixes and safety switches allowed.</li>
+                    <li>Automated smoke, regression, and security scans must be green.</li>
+                    <li>Release notes updated for each fix (issue ID + risk + test evidence).</li>
+                  </ul>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div class="text-sm font-bold">Tag & sign-off</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Tag the release branch HEAD with a semantic version (see Versioning & Tags) once exit criteria are met.</li>
+                    <li>Publish release notes with commit range, known issues, and rollout plan.</li>
+                    <li>Release manager signs off and hands over to deployment owners.</li>
+                  </ul>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div class="text-sm font-bold">Deploy & monitor</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Promote the tagged artifact through environments (Dev → UAT → Prod) without rebuilds.</li>
+                    <li>Verify health metrics and error budgets after each hop; pause if SLOs degrade.</li>
+                    <li>Finalize post-release review with lessons learned and follow-up tasks.</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 class="text-lg font-bold">Roles & responsibilities</h2>
+              <div class="mt-3 grid gap-4 md:grid-cols-3">
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+                  <div class="text-sm font-bold">Release manager</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Owns the calendar, scope, and cut decision.</li>
+                    <li>Approves exceptions and coordinates sign-off.</li>
+                    <li>Ensures documentation and tags are published.</li>
+                  </ul>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+                  <div class="text-sm font-bold">QA lead</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Defines the test matrix and exit criteria.</li>
+                    <li>Tracks defects and communicates risk.</li>
+                    <li>Signs off UAT readiness.</li>
+                  </ul>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+                  <div class="text-sm font-bold">Engineering owner</div>
+                  <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                    <li>Executes fixes via PR, keeps branch green.</li>
+                    <li>Maintains backward compatibility during rollout.</li>
+                    <li>Prepares rollback plan and feature flag toggles.</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+          </section>
+
+          <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <div class="flex justify-between">
+              <span>© Internal — Git Operating Model</span>
+              <span>Doc version: 0.1</span>
+            </div>
+          </footer>
+        </article>
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/site.js"></script>
+</body>
+</html>
