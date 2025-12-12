@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>Git in Practice — Branch Types & Naming Conventions</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <!-- Prevent FOUC -->
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+
+<header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-14 items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button id="btnMobileNav"
+                class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
+          ☰
+        </button>
+
+        <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white">Gi</span>
+          <span class="hidden sm:inline">Git in Practice</span>
+        </a>
+
+        <span class="hidden sm:inline text-slate-400">/</span>
+        <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">
+          Branching
+        </span>
+      </div>
+
+      <button id="btnTheme"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
+        <span id="themeIcon">🌙</span>
+        <span class="hidden sm:inline" id="themeLabel">Dark</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+  <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+
+    <!-- Sidebar -->
+<aside class="lg:sticky lg:top-20">
+  <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+
+  <div id="sidebarPanel"
+       class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto
+              border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950
+              lg:static lg:block lg:h-auto lg:w-auto lg:border lg:rounded-2xl">
+
+    <!-- Sidebar will be injected here -->
+    <div data-include="../partials/sidebar.html"></div>
+
+  </div>
+</aside>
+
+    <!-- Content -->
+    <main class="min-w-0">
+
+      <!-- Breadcrumb -->
+      <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+        <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+        <span class="mx-2">/</span>
+        <span class="font-semibold">Branching</span>
+        <span class="mx-2">/</span>
+        <span class="font-semibold">Branch Types & Naming</span>
+      </div>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+
+        <!-- Header -->
+        <header class="mb-6">
+          <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">
+            Branch Types & Naming Conventions
+          </h1>
+          <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+            This page defines the <b>only allowed branch types</b> and the <b>mandatory naming conventions</b>
+            for repositories following the approved branching model. These conventions enable automation,
+            reduce cognitive load, and make repository state obvious to everyone.
+          </p>
+        </header>
+
+        <section class="space-y-10">
+
+          <!-- Why naming matters -->
+          <section>
+            <h2 class="text-lg font-bold">Why Branch Naming Is a Policy (Not Style)</h2>
+            <p class="mt-3 text-slate-700 dark:text-slate-200">
+              Branch names are not cosmetic. They encode <b>intent, lifecycle, and risk</b>.
+              CI pipelines, environment rules, and permissions depend on predictable naming.
+            </p>
+
+            <div class="mt-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 dark:border-indigo-900/40 dark:bg-indigo-950/40 dark:text-indigo-100">
+              <b>Design principle:</b>  
+              From the branch name alone, an engineer should know:
+              <ul class="mt-2 list-disc pl-5">
+                <li>Why the branch exists</li>
+                <li>Where it may be merged</li>
+                <li>How long it should live</li>
+                <li>What approvals apply</li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- Allowed branches -->
+          <section>
+            <h2 class="text-lg font-bold">Allowed Branch Types</h2>
+
+            <div class="mt-4 overflow-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+              <table class="w-full text-sm">
+                <thead class="bg-slate-50 dark:bg-slate-900">
+                  <tr>
+                    <th class="px-4 py-3 text-left font-bold">Type</th>
+                    <th class="px-4 py-3 text-left font-bold">Pattern</th>
+                    <th class="px-4 py-3 text-left font-bold">Purpose</th>
+                    <th class="px-4 py-3 text-left font-bold">Lifetime</th>
+                    <th class="px-4 py-3 text-left font-bold">Merge Target</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                  <tr>
+                    <td class="px-4 py-3 font-semibold">Mainline</td>
+                    <td class="px-4 py-3"><code>main</code></td>
+                    <td class="px-4 py-3">Continuous integration of features</td>
+                    <td class="px-4 py-3">Permanent</td>
+                    <td class="px-4 py-3">—</td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3 font-semibold">Feature</td>
+                    <td class="px-4 py-3"><code>feature/&lt;short-desc&gt;</code></td>
+                    <td class="px-4 py-3">New functionality</td>
+                    <td class="px-4 py-3">Days</td>
+                    <td class="px-4 py-3"><code>main</code></td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3 font-semibold">Release</td>
+                    <td class="px-4 py-3"><code>release/x.y</code></td>
+                    <td class="px-4 py-3">UAT stabilization</td>
+                    <td class="px-4 py-3">Weeks</td>
+                    <td class="px-4 py-3"><code>main</code> (after ship)</td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3 font-semibold">Fix</td>
+                    <td class="px-4 py-3"><code>fix/&lt;issue-id&gt;</code></td>
+                    <td class="px-4 py-3">Bug fix during UAT</td>
+                    <td class="px-4 py-3">Hours–days</td>
+                    <td class="px-4 py-3"><code>release/x.y</code></td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3 font-semibold">Hotfix</td>
+                    <td class="px-4 py-3"><code>hotfix/&lt;issue-id&gt;</code></td>
+                    <td class="px-4 py-3">Production emergency</td>
+                    <td class="px-4 py-3">Hours</td>
+                    <td class="px-4 py-3">Tag → <code>main</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Detailed rules -->
+          <section>
+            <h2 class="text-lg font-bold">Naming Rules (Mandatory)</h2>
+            <ul class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+              <li><b>Must:</b> Use lowercase letters only.</li>
+              <li><b>Must:</b> Use hyphens for word separation.</li>
+              <li><b>Must:</b> Keep names short, descriptive, and task-oriented.</li>
+              <li><b>Must:</b> Include issue or ticket ID when available.</li>
+              <li><b>Must not:</b> Encode environment names (<code>uat</code>, <code>prod</code>, <code>dev</code>) in branch names.</li>
+              <li><b>Must not:</b> Create long-lived personal branches.</li>
+            </ul>
+          </section>
+
+          <!-- Examples -->
+          <section>
+            <h2 class="text-lg font-bold">Examples</h2>
+
+            <div class="mt-3 grid gap-4 lg:grid-cols-2 text-sm">
+              <div class="rounded-2xl border border-green-200 bg-green-50 p-4 dark:border-green-900/40 dark:bg-green-950/40">
+                <div class="font-bold text-green-900 dark:text-green-200">Good</div>
+                <ul class="mt-2 list-disc pl-5 text-green-900 dark:text-green-200">
+                  <li><code>feature/user-login-rate-limit</code></li>
+                  <li><code>fix/JIRA-412-null-pointer</code></li>
+                  <li><code>release/2.4</code></li>
+                  <li><code>hotfix/INC-7782-token-expiry</code></li>
+                </ul>
+              </div>
+
+              <div class="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-900/40 dark:bg-red-950/40">
+                <div class="font-bold text-red-900 dark:text-red-200">Bad</div>
+                <ul class="mt-2 list-disc pl-5 text-red-900 dark:text-red-200">
+                  <li><code>feature123</code></li>
+                  <li><code>john-dev-branch</code></li>
+                  <li><code>uat-fixes</code></li>
+                  <li><code>release-final-final</code></li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- Enforcement -->
+          <section>
+            <h2 class="text-lg font-bold">Enforcement</h2>
+            <p class="mt-3 text-slate-700 dark:text-slate-200">
+              These conventions are enforced via:
+            </p>
+            <ul class="mt-3 list-disc pl-5 text-slate-700 dark:text-slate-200">
+              <li>Branch protection rules (GitHub / GitLab)</li>
+              <li>CI validation on branch name patterns</li>
+              <li>PR templates and CODEOWNERS</li>
+            </ul>
+          </section>
+
+          <!-- Related -->
+          <section>
+            <h2 class="text-lg font-bold">Related Pages</h2>
+            <ul class="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+              <li><a class="link" href="../branching/approved-branching-model.html">Approved Branching Model</a></li>
+              <li><a class="link" href="../branching/branch-decision-table.html">Branch Decision Table</a></li>
+              <li><a class="link" href="../merging/pull-requests-mandatory.html">Pull Requests Mandatory</a></li>
+              <li><a class="link" href="../governance/anti-patterns.html">Anti-patterns</a></li>
+            </ul>
+          </section>
+
+        </section>
+
+        <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div class="flex justify-between">
+            <span>© Internal — Git Operating Model</span>
+            <span>Doc version: 0.1</span>
+          </div>
+        </footer>
+      </article>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+/* assets/site.css */
+
+/* Optional soft shadow token used in the templates */
+.shadow-soft { box-shadow: 0 10px 30px rgba(0,0,0,0.10); }
+
+/* Nice scrollbars (optional, safe) */
+@media (min-width: 1024px) {
+  #sidebarPanel::-webkit-scrollbar { width: 10px; }
+  #sidebarPanel::-webkit-scrollbar-thumb { background: rgba(100,116,139,.25); border-radius: 999px; }
+  #sidebarPanel::-webkit-scrollbar-track { background: transparent; }
+}

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>Git in Practice — Branch Decision Table</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <!-- Prevent FOUC -->
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+
+<header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-14 items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button id="btnMobileNav"
+                class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                aria-label="Open navigation" aria-expanded="false">
+          ☰
+        </button>
+
+        <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+          <span class="hidden sm:inline">Git in Practice</span>
+        </a>
+
+        <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+        <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">
+          Branching
+        </span>
+      </div>
+
+      <button id="btnTheme"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+              aria-label="Toggle dark mode">
+        <span id="themeIcon" aria-hidden="true">🌙</span>
+        <span class="hidden sm:inline" id="themeLabel">Dark</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+  <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+
+    <!-- Sidebar -->
+    <aside class="lg:sticky lg:top-20">
+        <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+
+        <div id="sidebarPanel"
+            class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto
+                    border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950
+                    lg:static lg:block lg:h-auto lg:w-auto lg:border lg:rounded-2xl">
+
+            <!-- Sidebar will be injected here -->
+            <div data-include="../partials/sidebar.html"></div>
+
+        </div>
+    </aside>
+
+    <!-- Content -->
+    <main class="min-w-0">
+      <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+        <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+        <span class="mx-2">/</span>
+        <span class="font-semibold text-slate-700 dark:text-slate-200">Branching</span>
+        <span class="mx-2">/</span>
+        <span class="font-semibold text-slate-700 dark:text-slate-200">Branch Decision Table</span>
+      </div>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+        <header class="mb-6">
+          <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Branch Decision Table</h1>
+          <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+            A single reference table: <b>if X happens</b>, which branch to create, from where, where to merge,
+            which environments are affected, and what extra rules apply.
+          </p>
+
+          <div class="mt-4 flex flex-wrap gap-2 text-xs">
+            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Applies to: Latest-only releases</span>
+            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">UAT window: Multi-day</span>
+            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Artifact: Docker image</span>
+          </div>
+        </header>
+
+        <!-- Quick rule -->
+        <section class="mb-8 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 dark:border-indigo-900/40 dark:bg-indigo-950/40 dark:text-indigo-100">
+          <b>Quick rule:</b> Features branch from <b>main</b>. During UAT, bugfixes branch from <b>release/x.y</b>.
+          Production emergencies branch from the <b>production tag</b>.
+        </section>
+
+        <!-- Decision table -->
+        <section>
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <h2 class="text-lg font-bold">Decision Table</h2>
+            <button class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900"
+                    data-copy="Use this page as the source of truth for branch choices. If a scenario is not covered, escalate to Platform.">
+              Copy policy note
+            </button>
+          </div>
+
+          <div class="overflow-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+            <table class="min-w-[980px] w-full text-sm">
+              <thead class="bg-slate-50 dark:bg-slate-900">
+                <tr>
+                  <th class="px-4 py-3 text-left font-bold">Scenario</th>
+                  <th class="px-4 py-3 text-left font-bold">Create branch</th>
+                  <th class="px-4 py-3 text-left font-bold">Branch from</th>
+                  <th class="px-4 py-3 text-left font-bold">Merge into</th>
+                  <th class="px-4 py-3 text-left font-bold">Deploy target</th>
+                  <th class="px-4 py-3 text-left font-bold">Notes / extra rules</th>
+                </tr>
+              </thead>
+
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                <tr>
+                  <td class="px-4 py-3 font-semibold">New feature work (default)</td>
+                  <td class="px-4 py-3"><code>feature/&lt;short-desc&gt;</code></td>
+                  <td class="px-4 py-3"><code>main</code></td>
+                  <td class="px-4 py-3"><code>main</code></td>
+                  <td class="px-4 py-3">Dev / CI preview</td>
+                  <td class="px-4 py-3">PR required. Keep branches short-lived.</td>
+                </tr>
+
+                <tr>
+                  <td class="px-4 py-3 font-semibold">Bug found during normal development</td>
+                  <td class="px-4 py-3"><code>fix/&lt;issue-id&gt;-&lt;short-desc&gt;</code></td>
+                  <td class="px-4 py-3"><code>main</code></td>
+                  <td class="px-4 py-3"><code>main</code></td>
+                  <td class="px-4 py-3">Dev / CI preview</td>
+                  <td class="px-4 py-3">Treat as normal PR. Prefer adding a test that fails before the fix.</td>
+                </tr>
+
+                <tr>
+                  <td class="px-4 py-3 font-semibold">Start UAT stabilization (release cut)</td>
+                  <td class="px-4 py-3"><code>release/x.y</code></td>
+                  <td class="px-4 py-3"><code>main</code> (green commit)</td>
+                  <td class="px-4 py-3">N/A (later merge back)</td>
+                  <td class="px-4 py-3">UAT from <code>release/x.y</code></td>
+                  <td class="px-4 py-3">After cut: no new features into release branch.</td>
+                </tr>
+
+                <tr>
+                  <td class="px-4 py-3 font-semibold">Bug found in UAT after release cut</td>
+                  <td class="px-4 py-3"><code>fix/&lt;issue-id&gt;-&lt;short-desc&gt;</code></td>
+                  <td class="px-4 py-3"><code>release/x.y</code></td>
+                  <td class="px-4 py-3"><code>release/x.y</code></td>
+                  <td class="px-4 py-3">UAT</td>
+                  <td class="px-4 py-3">Fix must be minimal. Add test if possible. Do not merge unrelated refactors.</td>
+                </tr>
+
+                <tr>
+                  <td class="px-4 py-3 font-semibold">Same UAT bug also exists in main</td>
+                  <td class="px-4 py-3"><code>fix/&lt;issue-id&gt;-forwardport</code></td>
+                  <td class="px-4 py-3"><code>main</code></td>
+                  <td class="px-4 py-3"><code>main</code></td>
+                  <td class="px-4 py-3">Dev / CI</td>
+                  <td class="px-4 py-3">
+                    After stabilizing, either (a) merge release back to main, or (b) do a small forward-port PR.
+                    Choose the simpler path that avoids conflicts.
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="px-4 py-3 font-semibold">Ship customer release</td>
+                  <td class="px-4 py-3">(no new branch) create tag</td>
+                  <td class="px-4 py-3"><code>release/x.y</code></td>
+                  <td class="px-4 py-3">Tag <code>vX.Y.Z</code></td>
+                  <td class="px-4 py-3">Prod / Customer</td>
+                  <td class="px-4 py-3">Prod deploy must reference a tag (or digest). Build once; promote artifact.</td>
+                </tr>
+
+                <tr>
+                  <td class="px-4 py-3 font-semibold">Close release (post-ship)</td>
+                  <td class="px-4 py-3">(merge activity)</td>
+                  <td class="px-4 py-3"><code>release/x.y</code></td>
+                  <td class="px-4 py-3"><code>main</code></td>
+                  <td class="px-4 py-3">N/A</td>
+                  <td class="px-4 py-3">Merge release back to main. Delete release branch (latest-only).</td>
+                </tr>
+
+                <tr>
+                  <td class="px-4 py-3 font-semibold">Production emergency bug (hotfix)</td>
+                  <td class="px-4 py-3"><code>hotfix/&lt;issue-id&gt;-&lt;short-desc&gt;</code></td>
+                  <td class="px-4 py-3">Tag <code>vX.Y.Z</code> currently in prod</td>
+                  <td class="px-4 py-3">Tag <code>vX.Y.(Z+1)</code> then merge to <code>main</code></td>
+                  <td class="px-4 py-3">Prod</td>
+                  <td class="px-4 py-3">Keep change minimal. Forward-port to main is mandatory to prevent regression.</td>
+                </tr>
+
+                <tr>
+                  <td class="px-4 py-3 font-semibold">Experimental spike / POC</td>
+                  <td class="px-4 py-3"><code>feature/spike-&lt;short-desc&gt;</code></td>
+                  <td class="px-4 py-3"><code>main</code></td>
+                  <td class="px-4 py-3"><code>main</code> (optional)</td>
+                  <td class="px-4 py-3">None / ephemeral</td>
+                  <td class="px-4 py-3">Prefer a draft PR. If not merged, branch must be deleted.</td>
+                </tr>
+
+                <tr>
+                  <td class="px-4 py-3 font-semibold">Environment-specific change request</td>
+                  <td class="px-4 py-3"><span class="font-semibold text-red-600 dark:text-red-400">Not a branch</span></td>
+                  <td class="px-4 py-3">N/A</td>
+                  <td class="px-4 py-3">N/A</td>
+                  <td class="px-4 py-3">Config / secrets</td>
+                  <td class="px-4 py-3">Handled via environment config, feature flags, or deployment settings — never via env branches.</td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Guardrails -->
+        <section class="mt-10">
+          <h2 class="text-lg font-bold">Guardrails (Common Mistakes We Avoid)</h2>
+          <ul class="mt-3 list-disc space-y-2 pl-5 text-slate-700 dark:text-slate-200">
+            <li><b>Do not</b> create long-lived <code>dev</code>, <code>uat</code>, <code>prod</code> branches.</li>
+            <li><b>Do not</b> merge feature work into <code>release/x.y</code> after the release cut.</li>
+            <li><b>Do not</b> “promote code” by copying between repositories.</li>
+            <li>Prefer shipping the same Docker image (digest) across environments to avoid rebuild drift.</li>
+          </ul>
+        </section>
+
+        <!-- Related pages -->
+        <section class="mt-10">
+          <h2 class="text-lg font-bold">Related Pages</h2>
+          <ul class="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+            <li><a class="link" href="../branching/approved-branching-model.html">Approved Branching Model</a></li>
+            <li><a class="link" href="../branching/branch-types-and-naming.html">Branch Types & Naming</a></li>
+            <li><a class="link" href="../releases/release-lifecycle.html">Release Lifecycle</a></li>
+            <li><a class="link" href="../environments/docker-build-once-promote.html">Docker: Build Once, Promote</a></li>
+          </ul>
+        </section>
+
+        <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>© Internal — Git Operating Model</div>
+            <div>Doc version: <span class="font-semibold">0.1</span></div>
+          </div>
+        </footer>
+      </article>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

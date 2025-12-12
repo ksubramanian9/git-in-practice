@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>Git in Practice — Approved Branching Model (Latest-Only + UAT Stabilization)</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <!-- Prevent FOUC -->
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+
+<header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-14 items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button id="btnMobileNav"
+                class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                aria-label="Open navigation" aria-expanded="false">
+          ☰
+        </button>
+
+        <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+          <span class="hidden sm:inline">Git in Practice</span>
+        </a>
+
+        <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+        <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">
+          Branching
+        </span>
+      </div>
+
+      <button id="btnTheme"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+              aria-label="Toggle dark mode">
+        <span id="themeIcon" aria-hidden="true">🌙</span>
+        <span class="hidden sm:inline" id="themeLabel">Dark</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+  <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+    <!-- Sidebar -->
+<aside class="lg:sticky lg:top-20">
+  <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+
+  <div id="sidebarPanel"
+       class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto
+              border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950
+              lg:static lg:block lg:h-auto lg:w-auto lg:border lg:rounded-2xl">
+
+    <!-- Sidebar will be injected here -->
+    <div data-include="../partials/sidebar.html"></div>
+
+  </div>
+</aside>
+
+    <!-- Content -->
+    <main class="min-w-0">
+      <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+        <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+        <span class="mx-2">/</span>
+        <span class="font-semibold text-slate-700 dark:text-slate-200">Branching</span>
+        <span class="mx-2">/</span>
+        <span class="font-semibold text-slate-700 dark:text-slate-200">Approved Branching Model</span>
+      </div>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+        <header class="mb-6">
+          <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">
+            Approved Branching Model
+            <span class="mt-1 block text-base font-semibold text-slate-600 dark:text-slate-300">
+              Latest-only releases with long UAT stabilization
+            </span>
+          </h1>
+          <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+            This page defines the standard branching model for repositories that ship <b>versioned customer releases</b>,
+            support <b>only the latest version</b>, and require a <b>multi-day UAT window</b>. The goal is to keep UAT stable
+            without freezing all development work.
+          </p>
+
+          <div class="mt-4 flex flex-wrap gap-2 text-xs">
+            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Status: Draft</span>
+            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Applies to: Latest-only products</span>
+            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Release artifact: Docker image</span>
+          </div>
+        </header>
+
+        <section class="space-y-10">
+          <!-- Model summary -->
+          <section>
+            <h2 class="text-lg font-bold">Model Summary</h2>
+            <div class="mt-3 grid gap-4 lg:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+                <div class="font-bold">Branches we use</div>
+                <ul class="mt-3 space-y-2">
+                  <li><b>main</b> — continuous development; must remain buildable</li>
+                  <li><b>release/x.y</b> — short-lived stabilization branch during UAT</li>
+                  <li><b>feature/*</b> — short-lived development branches off main</li>
+                  <li><b>fix/*</b> — short-lived bugfix branches off release/x.y during UAT</li>
+                  <li><b>hotfix/*</b> — emergency patch branch from a production tag (rare)</li>
+                </ul>
+              </div>
+
+              <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 dark:border-indigo-900/40 dark:bg-indigo-950/40 dark:text-indigo-100">
+                <div class="font-bold">The one-line rule</div>
+                <p class="mt-2">
+                  After UAT begins, <b>features continue on main</b>, while <b>only bug fixes go into release/x.y</b> until the version is tagged and shipped.
+                </p>
+                <p class="mt-3 text-indigo-900/90 dark:text-indigo-100/90">
+                  We avoid repo-per-environment and environment branches; environments are deployment targets.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Policy -->
+          <section>
+            <h2 class="text-lg font-bold">Policy</h2>
+            <div class="mt-3 space-y-4 text-slate-700 dark:text-slate-200">
+              <p><b>Must:</b> All development work merges into <b>main</b> via PR; direct pushes to main are not allowed.</p>
+              <p><b>Must:</b> When UAT starts, create <b>release/x.y</b> from a chosen green commit on main (the “release cut”).</p>
+              <p><b>Must:</b> During stabilization, <b>release/x.y</b> accepts only bug fixes and release-only changes (e.g., version metadata).</p>
+              <p><b>Must:</b> Production/customer shipment is always tied to an immutable <b>tag</b> (e.g., <code class="rounded bg-slate-100 px-1 py-0.5 dark:bg-slate-900">vX.Y.Z</code>).</p>
+              <p><b>Must:</b> Build Docker images with immutable identifiers (commit SHA and/or version tag). Promote the same image through environments.</p>
+              <p><b>Must not:</b> Create separate repositories for Dev/UAT/Prod or “promote code” by copying between repos.</p>
+              <p><b>Must not:</b> Merge new features into <b>release/x.y</b> after the release cut.</p>
+            </div>
+
+            <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+              <div class="font-bold">Rationale</div>
+              <p class="mt-2">
+                This model keeps UAT stable (controlled change surface) while allowing parallel feature development on main.
+                It also preserves traceability: “Prod is running tag <b>vX.Y.Z</b> (commit SHA …)”.
+              </p>
+            </div>
+          </section>
+
+          <!-- Procedure -->
+          <section>
+            <h2 class="text-lg font-bold">Procedure</h2>
+
+            <div class="mt-3 grid gap-4 lg:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                <div class="text-sm font-bold">A) Normal development (default state)</div>
+                <ol class="mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                  <li>Create <b>feature/*</b> from <b>main</b>.</li>
+                  <li>Open PR → required CI checks → required review → merge to <b>main</b>.</li>
+                  <li>Main remains green and continuously integrable.</li>
+                </ol>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                <div class="text-sm font-bold">B) UAT stabilization (release cut)</div>
+                <ol class="mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                  <li>Cut <b>release/x.y</b> from a selected green commit on main.</li>
+                  <li>Deploy UAT only from <b>release/x.y</b> (not from main).</li>
+                  <li>Bug fixes branch from <b>release/x.y</b> as <b>fix/*</b> and merge back into <b>release/x.y</b>.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="mt-4 grid gap-4 lg:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                <div class="text-sm font-bold">C) Ship (tag and release)</div>
+                <ol class="mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                  <li>Freeze changes into <b>release/x.y</b> (tighten approvals).</li>
+                  <li>Create tag <b>vX.Y.Z</b> on the exact commit being shipped.</li>
+                  <li>Build (or re-tag) Docker image and distribute to customers.</li>
+                </ol>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                <div class="text-sm font-bold">D) Close release (mandatory hygiene)</div>
+                <ol class="mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                  <li>Merge <b>release/x.y</b> back into <b>main</b> (forward the fixes).</li>
+                  <li>Delete <b>release/x.y</b> after shipment (latest-only).</li>
+                  <li>Record release notes and the shipped tag in the release log.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-sm font-bold">Reference commands (example)</div>
+                <button class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900"
+                        data-copy="git fetch origin&#10;git checkout main&#10;git pull&#10;git checkout -b release/2.4&#10;git push -u origin release/2.4&#10;&#10;# later, ship&#10;git checkout release/2.4&#10;git tag v2.4.0&#10;git push origin v2.4.0">
+                  Copy
+                </button>
+              </div>
+              <pre class="mt-3 overflow-auto rounded-xl bg-slate-950 p-4 text-xs text-slate-100"><code>git fetch origin
+git checkout main
+git pull
+git checkout -b release/2.4
+git push -u origin release/2.4
+
+# later, ship
+git checkout release/2.4
+git tag v2.4.0
+git push origin v2.4.0</code></pre>
+              <p class="mt-3 text-xs text-slate-600 dark:text-slate-300">
+                Note: enforce branch protections so release cuts and tags are performed only by authorized roles.
+              </p>
+            </div>
+          </section>
+
+          <!-- ASCII diagram -->
+          <section>
+            <h2 class="text-lg font-bold">Branch Topology</h2>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              A simplified view of how main and release/x.y diverge during UAT, then converge after shipping.
+            </p>
+
+            <div class="mt-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+              <pre class="overflow-auto rounded-xl bg-slate-950 p-4 text-xs text-slate-100"><code>main:      A — B — C — D — E — F — G  (features continue)
+                 \
+release/2.4:       C — c1 — c2 — [TAG v2.4.0] — (merge back to main)
+
+Legend:
+- C : release cut (branch created)
+- c1,c2 : UAT bug fixes only
+- TAG : customer shipment point</code></pre>
+            </div>
+          </section>
+
+          <!-- Exceptions -->
+          <section>
+            <h2 class="text-lg font-bold">Exceptions</h2>
+            <div class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+              <p><b>Hotfix allowed</b> when a customer-impacting production defect cannot wait for the next planned release.</p>
+              <ul class="list-disc space-y-2 pl-5 text-sm">
+                <li>Create <b>hotfix/*</b> from the production tag (e.g., <code class="rounded bg-slate-100 px-1 py-0.5 dark:bg-slate-900">v2.4.0</code>).</li>
+                <li>Tag the patch release (e.g., <code class="rounded bg-slate-100 px-1 py-0.5 dark:bg-slate-900">v2.4.1</code>).</li>
+                <li>Merge hotfix back into <b>main</b> immediately after shipment.</li>
+              </ul>
+              <p class="text-sm text-slate-600 dark:text-slate-300">
+                All exceptions must be recorded in the release log and approved by the repo owners (or Platform).
+              </p>
+            </div>
+          </section>
+
+          <!-- Links -->
+          <section>
+            <h2 class="text-lg font-bold">Related Pages</h2>
+            <ul class="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+              <li><a class="link" href="../branching/branch-types-and-naming.html">Branch Types & Naming</a></li>
+              <li><a class="link" href="../branching/branch-decision-table.html">Branch Decision Table</a></li>
+              <li><a class="link" href="../releases/release-lifecycle.html">Release Lifecycle</a></li>
+              <li><a class="link" href="../environments/docker-build-once-promote.html">Docker: Build Once, Promote</a></li>
+            </ul>
+          </section>
+        </section>
+
+        <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>© Internal — Git Operating Model</div>
+            <div>Doc version: <span class="font-semibold">0.1</span></div>
+          </div>
+        </footer>
+      </article>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

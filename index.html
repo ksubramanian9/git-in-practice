@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Git in Practice — Branching, Releases, and Team Operating Model</title>
+
+  <!-- Tailwind (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+
+  <!-- Prevent FOUC: apply stored theme before paint -->
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme'); // 'light' | 'dark' | null
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="./assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+  <!-- Top bar -->
+  <header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+    <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-14 items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <button id="btnMobileNav"
+                  class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                  aria-label="Open navigation" aria-expanded="false">
+            ☰
+          </button>
+
+          <a href="./index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+            <span class="hidden sm:inline">Git in Practice</span>
+          </a>
+
+          <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+          <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">
+            Home
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div class="hidden md:flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+            <span>⌘K</span><span class="select-none">Search…</span>
+          </div>
+
+          <button id="btnTheme"
+                  class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                  aria-label="Toggle dark mode">
+            <span id="themeIcon" aria-hidden="true">🌙</span>
+            <span class="hidden sm:inline" id="themeLabel">Dark</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+      <!-- Sidebar -->
+      <aside class="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-auto">
+        <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+
+        <div id="sidebarPanel"
+             class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto border-r border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-950 lg:static lg:block lg:h-auto lg:w-auto lg:max-w-none lg:border lg:rounded-2xl lg:p-4 lg:shadow-none">
+          <div class="mb-3">
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Navigation</div>
+          </div>
+
+          <nav class="space-y-6 text-sm">
+            <div>
+              <div class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Principles</div>
+              <ul class="space-y-1">
+                <li><a class="nav-link" href="./principles/one-repo-multiple-environments.html">One Repo, Multiple Environments</a></li>
+                <li><a class="nav-link" href="./principles/mainline-is-always-buildable.html">Mainline Is Always Buildable</a></li>
+                <li><a class="nav-link" href="./principles/release-artifacts-are-immutable.html">Release Artifacts Are Immutable</a></li>
+                <li><a class="nav-link" href="./principles/history-rewriting-rules.html">History Rewriting Rules</a></li>
+                <li><a class="nav-link" href="./principles/production-is-always-traceable.html">Production Is Always Traceable</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <div class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Branching</div>
+              <ul class="space-y-1">
+                <li><a class="nav-link" href="./branching/approved-branching-model.html">Approved Branching Model</a></li>
+                <li><a class="nav-link" href="./branching/branch-types-and-naming.html">Branch Types & Naming</a></li>
+                <li><a class="nav-link" href="./branching/branch-decision-table.html">Branch Decision Table</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <div class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Merging</div>
+              <ul class="space-y-1">
+                <li><a class="nav-link" href="./merging/pull-requests-mandatory.html">PRs Are Mandatory</a></li>
+                <li><a class="nav-link" href="./merging/squash-vs-rebase-merge.html">Squash vs Rebase Merge</a></li>
+                <li><a class="nav-link" href="./merging/when-rebase-is-allowed.html">When Rebase Is Allowed</a></li>
+                <li><a class="nav-link" href="./merging/conflict-resolution-playbook.html">Conflict Resolution Playbook</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <div class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Releases</div>
+              <ul class="space-y-1">
+                <li><a class="nav-link" href="./releases/release-lifecycle.html">Release Lifecycle</a></li>
+                <li><a class="nav-link" href="./releases/versioning-and-tags.html">Versioning & Tags</a></li>
+                <li><a class="nav-link" href="./releases/hotfix-process.html">Hotfix Process</a></li>
+                <li><a class="nav-link" href="./releases/closing-a-release.html">Closing a Release</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <div class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Environments</div>
+              <ul class="space-y-1">
+                <li><a class="nav-link" href="./environments/environments-are-deploy-targets.html">Deploy Targets, Not Repos</a></li>
+                <li><a class="nav-link" href="./environments/docker-build-once-promote.html">Docker: Build Once, Promote</a></li>
+                <li><a class="nav-link" href="./environments/deployment-matrix.html">Deployment Matrix</a></li>
+                <li><a class="nav-link" href="./environments/rollback-and-recovery.html">Rollback & Recovery</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <div class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Platform</div>
+              <ul class="space-y-1">
+                <li><a class="nav-link" href="./platform/github-setup.html">GitHub Setup</a></li>
+                <li><a class="nav-link" href="./platform/gitlab-setup.html">GitLab Setup</a></li>
+                <li><a class="nav-link" href="./platform/required-ci-checks.html">Required CI Checks</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <div class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Governance</div>
+              <ul class="space-y-1">
+                <li><a class="nav-link" href="./governance/codeowners-and-review.html">CODEOWNERS & Review</a></li>
+                <li><a class="nav-link" href="./governance/exception-handling.html">Exception Handling</a></li>
+                <li><a class="nav-link" href="./governance/anti-patterns.html">Anti-patterns</a></li>
+                <li><a class="nav-link" href="./governance/scaling-to-100-engineers.html">Scaling to 100+ Engineers</a></li>
+              </ul>
+            </div>
+          </nav>
+
+          <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            <div class="font-bold">Doc owner</div>
+            <div class="mt-1">Engineering Platform</div>
+            <div class="mt-3 font-bold">Last reviewed</div>
+            <div class="mt-1">YYYY-MM-DD</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <main class="min-w-0">
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+          <header class="mb-6">
+            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">
+              Git in Practice
+              <span class="block text-base font-semibold text-slate-600 dark:text-slate-300">Branching, Releases, and Team Operating Model</span>
+            </h1>
+            <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+              This is an internal operating manual: how our teams use Git to collaborate, stabilize versioned releases,
+              and ship Docker images with traceability across Dev/UAT/Prod.
+            </p>
+
+            <div class="mt-4 flex flex-wrap gap-2 text-xs">
+              <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Status: Draft</span>
+              <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Applies to: All repos</span>
+              <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">Owner: Platform</span>
+            </div>
+          </header>
+
+          <section class="grid gap-6 lg:grid-cols-3">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+              <div class="text-sm font-bold">Quick Start</div>
+              <ul class="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-200">
+                <li><a class="link" href="./branching/approved-branching-model.html">Our approved branching model</a></li>
+                <li><a class="link" href="./releases/release-lifecycle.html">Release lifecycle: cut → UAT → tag → ship</a></li>
+                <li><a class="link" href="./environments/docker-build-once-promote.html">Docker: build once, promote</a></li>
+              </ul>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+              <div class="text-sm font-bold">Non-negotiables</div>
+              <ul class="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-200">
+                <li>One repo, many environments (no repo-per-env)</li>
+                <li>Production maps to a tag (or SHA)</li>
+                <li>Release artifacts are immutable</li>
+              </ul>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+              <div class="text-sm font-bold">Most used pages</div>
+              <ul class="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-200">
+                <li><a class="link" href="./merging/squash-vs-rebase-merge.html">Squash vs rebase-merge</a></li>
+                <li><a class="link" href="./platform/github-setup.html">GitHub enforcement setup</a></li>
+                <li><a class="link" href="./environments/deployment-matrix.html">Deployment matrix</a></li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="mt-8">
+            <h2 class="text-lg font-bold">Operating Model (in 8 lines)</h2>
+            <div class="mt-3 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 text-sm text-indigo-950 dark:border-indigo-900/40 dark:bg-indigo-950/40 dark:text-indigo-100">
+              <ol class="list-decimal space-y-2 pl-5">
+                <li>All development merges into <b>main</b> via PR with required CI + review.</li>
+                <li>When UAT starts, cut <b>release/x.y</b> from main.</li>
+                <li>Only bug fixes are merged into <b>release/x.y</b> during stabilization.</li>
+                <li>Build Docker image tagged by <b>SHA</b> (and later <b>vX.Y.Z</b> tag).</li>
+                <li>Promote the same image across <b>Dev → UAT → Prod</b>.</li>
+                <li>Ship by creating immutable tag <b>vX.Y.Z</b> on release branch.</li>
+                <li>Merge release branch back to main, then delete it.</li>
+                <li>Hotfixes are branched from the production tag and forward-ported to main.</li>
+              </ol>
+            </div>
+          </section>
+
+          <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>© Internal — Git Operating Model</div>
+              <div>Doc version: <span class="font-semibold">0.1</span></div>
+            </div>
+          </footer>
+        </article>
+      </main>
+    </div>
+  </div>
+
+  <script src="./assets/site.js"></script>
+</body>
+</html>

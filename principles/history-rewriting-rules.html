@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Git in Practice — History Rewriting Rules</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+
+<header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/70">
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-14 items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button id="btnMobileNav"
+                class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+                aria-label="Open navigation" aria-expanded="false">☰</button>
+
+        <a href="../index.html" class="flex items-center gap-2 font-extrabold tracking-tight">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-soft">Gi</span>
+          <span class="hidden sm:inline">Git in Practice</span>
+        </a>
+
+        <span class="hidden sm:inline text-slate-400 dark:text-slate-600">/</span>
+        <span class="hidden sm:inline text-sm font-semibold text-slate-600 dark:text-slate-300">Principles</span>
+      </div>
+
+      <button id="btnTheme"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+              aria-label="Toggle dark mode">
+        <span id="themeIcon" aria-hidden="true">🌙</span>
+        <span class="hidden sm:inline" id="themeLabel">Dark</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+  <div class="grid grid-cols-1 gap-6 py-6 lg:grid-cols-[280px_1fr]">
+    <aside class="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-auto">
+      <div id="mobileBackdrop" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
+      <div id="sidebarPanel"
+           class="fixed left-0 top-14 z-50 hidden h-[calc(100vh-3.5rem)] w-[86vw] max-w-[320px] overflow-auto border-r border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-950 lg:static lg:block lg:h-auto lg:w-auto lg:max-w-none lg:border lg:rounded-2xl lg:p-4 lg:shadow-none">
+        <div data-include="../partials/sidebar.html"></div>
+        <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+          <div class="font-bold">Doc owner</div><div class="mt-1">Engineering Platform</div>
+          <div class="mt-3 font-bold">Last reviewed</div><div class="mt-1">YYYY-MM-DD</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="min-w-0">
+      <div class="mb-4 text-sm text-slate-500 dark:text-slate-400">
+        <a href="../index.html" class="hover:text-slate-900 dark:hover:text-slate-100">Home</a>
+        <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">Principles</span>
+        <span class="mx-2">/</span><span class="font-semibold text-slate-700 dark:text-slate-200">History Rewriting Rules</span>
+      </div>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+        <header class="mb-6">
+          <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">History Rewriting Rules</h1>
+          <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">
+            Rewriting history (rebase, amend, force push) is powerful and dangerous. We allow it only in tightly defined situations.
+          </p>
+        </header>
+
+        <section class="space-y-10">
+          <section>
+            <h2 class="text-lg font-bold">Policy</h2>
+            <ul class="mt-3 space-y-3 text-slate-700 dark:text-slate-200">
+              <li><b>Must not:</b> Rewrite history on shared protected branches: <b>main</b>, <b>release/*</b>.</li>
+              <li><b>Must not:</b> Force push to protected branches.</li>
+              <li><b>May:</b> Rebase or amend commits on your own <b>feature/*</b> branch <i>before review is complete</i>.</li>
+              <li><b>Should:</b> Prefer squash merge for integrating feature work, to keep main history clean without rewriting shared history.</li>
+            </ul>
+
+            <div class="mt-5 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 dark:border-indigo-900/40 dark:bg-indigo-950/40 dark:text-indigo-100">
+              <div class="font-bold">Rationale</div>
+              <p class="mt-2">
+                Rewriting shared history breaks other peoples’ clones and causes “phantom conflicts”.
+                Our rule is simple: rewrite only where you are not impacting others.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Allowed vs Forbidden (quick matrix)</h2>
+            <div class="mt-3 overflow-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+              <table class="min-w-[760px] w-full text-sm">
+                <thead class="bg-slate-50 dark:bg-slate-900">
+                  <tr>
+                    <th class="px-4 py-3 text-left font-bold">Action</th>
+                    <th class="px-4 py-3 text-left font-bold">feature/*</th>
+                    <th class="px-4 py-3 text-left font-bold">main</th>
+                    <th class="px-4 py-3 text-left font-bold">release/*</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                  <tr>
+                    <td class="px-4 py-3 font-semibold">git rebase</td>
+                    <td class="px-4 py-3">Allowed (pre-merge)</td>
+                    <td class="px-4 py-3">Forbidden</td>
+                    <td class="px-4 py-3">Forbidden</td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3 font-semibold">git commit --amend</td>
+                    <td class="px-4 py-3">Allowed (pre-merge)</td>
+                    <td class="px-4 py-3">Forbidden</td>
+                    <td class="px-4 py-3">Forbidden</td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3 font-semibold">force push</td>
+                    <td class="px-4 py-3">Allowed (with care)</td>
+                    <td class="px-4 py-3">Forbidden</td>
+                    <td class="px-4 py-3">Forbidden</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Procedure</h2>
+            <ol class="mt-3 list-decimal space-y-2 pl-5 text-slate-700 dark:text-slate-200">
+              <li>If your feature branch is behind main, prefer <b>rebase onto main</b> before final review.</li>
+              <li>Never rebase a branch that others are actively using unless explicitly coordinated.</li>
+              <li>If you must force push your feature branch, announce it on the PR and ensure no one has based work on it.</li>
+            </ol>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold">Related Pages</h2>
+            <ul class="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+              <li><a class="link" href="../merging/squash-vs-rebase-merge.html">Squash vs Rebase Merge</a></li>
+              <li><a class="link" href="../merging/when-rebase-is-allowed.html">When Rebase Is Allowed</a></li>
+            </ul>
+          </section>
+        </section>
+
+        <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>© Internal — Git Operating Model</div><div>Doc version: <span class="font-semibold">0.1</span></div>
+          </div>
+        </footer>
+      </article>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>
